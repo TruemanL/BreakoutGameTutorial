@@ -51,11 +51,18 @@
         drawBall();
         drawPaddle();
 
-        if (y+dy > canvas.height - ballRadius || y+dy < ballRadius) {
-            dy = -dy;
-        }
         if (x+dx > canvas.width - ballRadius || x+dx < ballRadius) {
             dx = -dx;
+        }
+        if (y+dy < ballRadius) {
+            dy = -dy;
+        } else if ((x > paddleX && x < paddleX + paddleWidth) && (y+dy > canvas.height - ballRadius - paddleHeight)) {
+            dy = -dy;
+        } else if (y+dy > canvas.height - ballRadius) {
+            alert("GAME OVER");
+            x = canvas.width / 2;
+            y = canvas.height - 30;
+            document.location.reload();
         }
         x += dx;
         y += dy;
