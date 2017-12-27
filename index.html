@@ -39,6 +39,8 @@
     var brickOffsetTop = 30;
     var brickOffsetLeft = 30;
 
+    var score = 0;
+
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
 
@@ -86,12 +88,19 @@
                     if (xMatch(ballLeft, ballRight, brickLeft, brickRight) && vertCollide(ballTop, ballBot, brickTop, brickBot)) {
                         vertCollided = true;
                         b.status = 0;
+                        score++;
                     } else if (yMatch(ballTop, ballBot, brickTop, brickBot) && horzCollide(ballLeft, ballRight, brickLeft, brickRight)) {
                         horzCollided = true;
                         b.status = 0;
+                        score++;
                     }
                 }
             }
+        }
+
+        if (score >= brickRowCount * brickColumnCount) {
+            alert("YOU WIN, CONGRATULATIONS!");
+            document.location.reload();
         }
 
         if (vertCollided)
@@ -111,6 +120,12 @@
     }
     function horzCollide(ballLeft, ballRight, brickLeft, brickRight) {
         return ((ballLeft < brickRight && ballRight > brickRight) || (ballRight > brickLeft && ballLeft < brickLeft));
+    }
+
+    function drawScore() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#0095DD";
+        ctx.fillText("Score: " + score, 8, 20);
     }
 
     function drawBricks() {
@@ -153,6 +168,7 @@
         drawBall();
         drawPaddle();
         collisionDetection();
+        drawScore();
 
         if (x+dx > canvas.width - ballRadius || x+dx < ballRadius) {
             dx = -dx;
