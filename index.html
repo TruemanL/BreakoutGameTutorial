@@ -19,8 +19,9 @@
     var y = canvas.height-30;
 
     var ballRadius = 10;
-    var dx = 2;
-    var dy = -2;
+    var dx = 1.5;
+    var dy = -1.5;
+    var maxSpeed = 5;
 
     var paddleHeight = 10;
     var paddleWidth = 75;
@@ -61,22 +62,71 @@
     for (c = 0; c < brickColumnCount; c++ ) {
         bricks[c] = [];
         for (r = 0; r < brickRowCount; r++) {
-            bricks[c][r] = {x: 0, y: 0};
+            bricks[c][r] = {x: 0, y: 0, status: 1};
         }
+    }
+
+    function collisionDetection() {
+        var ballTop = y - ballRadius;
+        var ballBot = y + ballRadius;
+        var ballLeft = x - ballRadius;
+        var ballRight = x + ballRadius;
+        var vertCollided = false;
+        var horzCollided = false;
+
+        for(c = 0; c < brickColumnCount; c++) {
+            for (r = 0; r < brickRowCount; r++) {
+                var b = bricks[c][r];
+                var brickTop = b.y;
+                var brickBot = b.y + brickHeight;
+                var brickLeft = b.x;
+                var brickRight = b.x + brickWidth;
+
+                if (b.status == 1) {
+                    if (xMatch(ballLeft, ballRight, brickLeft, brickRight) && vertCollide(ballTop, ballBot, brickTop, brickBot)) {
+                        vertCollided = true;
+                        b.status = 0;
+                    } else if (yMatch(ballTop, ballBot, brickTop, brickBot) && horzCollide(ballLeft, ballRight, brickLeft, brickRight)) {
+                        horzCollided = true;
+                        b.status = 0;
+                    }
+                }
+            }
+        }
+
+        if (vertCollided)
+            dy = -dy;
+        if (horzCollided)
+            dx = -dx;
+    }
+
+    function xMatch(ballLeft, ballRight, brickLeft, brickRight) {
+        return (ballRight > brickLeft && ballLeft < brickRight);
+    }
+    function vertCollide(ballTop, ballBot, brickTop, brickBot) {
+        return ((ballTop < brickBot && ballBot > brickBot) || (ballBot > brickTop && ballTop < brickTop));
+    }
+    function yMatch(ballTop, ballBot, brickTop, brickBot) {
+        return (ballTop < brickBot && ballBot > brickTop);
+    }
+    function horzCollide(ballLeft, ballRight, brickLeft, brickRight) {
+        return ((ballLeft < brickRight && ballRight > brickRight) || (ballRight > brickLeft && ballLeft < brickLeft));
     }
 
     function drawBricks() {
         for (c = 0; c < brickColumnCount; c++) {
             for (r = 0; r < brickRowCount; r++) {
-                var brickX = (c*(brickWidth+brickPadding)) + brickOffsetLeft;
-                var brickY = (r*(brickHeight+brickPadding)) + brickOffsetTop;
-                bricks[c][r].x = brickX;
-                bricks[c][r].y = brickY;
-                ctx.beginPath();
-                ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                ctx.fillStyle = "#0095DD";
-                ctx.fill();
-                ctx.closePath();
+                if (bricks[c][r].status == 1) {
+                    var brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                    var brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                    bricks[c][r].x = brickX;
+                    bricks[c][r].y = brickY;
+                    ctx.beginPath();
+                    ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                    ctx.fillStyle = "#0095DD";
+                    ctx.fill();
+                    ctx.closePath();
+                }
             }
         }
     }
@@ -102,6 +152,7 @@
         drawBricks();
         drawBall();
         drawPaddle();
+        collisionDetection();
 
         if (x+dx > canvas.width - ballRadius || x+dx < ballRadius) {
             dx = -dx;
@@ -110,6 +161,13 @@
             dy = -dy;
         } else if ((x > paddleX && x < paddleX + paddleWidth) && (y+dy > canvas.height - ballRadius - paddleHeight)) {
             dy = -dy;
+            if (rightPressed)
+                dx += paddleSpeed*0.05;
+            if (leftPressed)
+                dx -= paddleSpeed*0.05;
+            if (Math.abs(dy < maxSpeed)) {
+                dy *= 1.05;
+            }
         } else if (y+dy > canvas.height - ballRadius) {
             alert("GAME OVER");
             x = canvas.width / 2;
